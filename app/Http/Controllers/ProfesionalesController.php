@@ -54,23 +54,26 @@ class ProfesionalesController extends Controller
             'cobertura' => 'nullable|string|max:255',
             'horario_atencion' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string|max:255',
-            'archivo_1' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_2' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_3' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_4' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_5' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_6' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
+            'archivo_1.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx|max:51200', // Máximo 50MB por archivo
+
+
         ]);
 
         // Instanciar el modelo y asignar los datos
         $profesionales = new Profesionales($validated);
 
-        // Manejar archivos subidos
-        foreach (['archivo_1', 'archivo_2', 'archivo_3', 'archivo_4', 'archivo_5', 'archivo_6'] as $archivo) {
-            if ($request->hasFile($archivo)) {
-                $profesionales->{$archivo} = $request->file($archivo)->store('uploads', 'public');
+        // Procesar cada archivo cargado
+        if ($request->hasFile('archivo_1')) {
+            foreach ($request->file('archivo_1') as $archivo) {
+                // Guardar el archivo en la carpeta 'uploads' en storage/public
+                $path = $archivo->store('uploads', 'public');
+                $archivosGuardados[] = $path;
             }
+
+            $profesionales->archivo_1 = implode(', ', $archivosGuardados);
         }
+
+        
 
         // Guardar el registro en la base de datos
         $profesionales->save();
@@ -95,8 +98,17 @@ class ProfesionalesController extends Controller
             $query->where('zona_atencion_id', $request->zona_atencion);
         }
 
+        // Aplicar filtro solo si 'localidad' tiene un valor
+        if ($request->filled('localidad')) {
+            $query->where('localidad', 'like', '%' . $request->input('localidad') . '%');
+        }
+
         // Obtener los resultados
         $profesionales = $query->get();
+
+        // Logueo los datos recibidos
+        //dd($profesionales); 
+       // $archivos = $profesionales->archivo_1;
 
         // Retornar la vista con los datos
         return view('profesionales.index', compact('profesionales', 'zonas'));
@@ -121,19 +133,27 @@ class ProfesionalesController extends Controller
         // Obtener todas las zonas de atención
         $zonasAtencion = Zonas_atencion::all();
 
+                // Logueo los datos recibidos
+        //dd($request->all()); 
+
+        \Log::info($profesionales); 
+
+        $archivos = $profesionales->archivo_1;
+
         // Retornar la vista con los datos del profesional y las zonas de atención
-        return view('profesionales.actualizar', compact('profesionales', 'zonasAtencion'));
+        return view('profesionales.actualizar', compact('profesionales', 'zonasAtencion', 'archivos'));
     }
 
 
 
     public function update(Request $request, $id)
     {
-        // Validar los datos del formulario
-        $request->validate([
+        \Log::info('rerererweweww222'); 
+        
+        $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
-            'dni' => 'required|numeric|unique:profesionales,dni',
+            'dni' => 'required|numeric|unique:profesionales,dni,' . $id,
             'matricula_nacional' => 'nullable|string|max:255',
             'matricula_provincial' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -151,19 +171,28 @@ class ProfesionalesController extends Controller
             'observaciones' => 'nullable|string|max:255',
 
             // Validaciones para los archivos
-            'archivo_1' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_2' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_3' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_4' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_5' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
-            'archivo_6' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:51200',
+            'archivo_1.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx|max:51200', // Máximo 50MB por archivo
         ]);
+        
 
+        //dd($request->all(), $request->file('archivo_1'));
+
+        if ($validator->fails()) {
+            \Log::info('Errores de validación detectados:', [
+                'input' => $request->all(),
+                'errors' => $validator->errors()->toArray(),
+            ]);
+        }
+ 
         // Obtener el profesional a actualizar
         $profesionales = Profesionales::findOrFail($id);
 
+        //dd($profesionales);
+
         // Logueo los datos recibidos
-        Log::info($request->all()); 
+        \Log::info($profesionales); 
+
+        \Log::info('sdsdsd'); 
 
         // Asigno los valores del formulario al modelo
         $profesionales->nombre = $request->nombre;
@@ -185,21 +214,36 @@ class ProfesionalesController extends Controller
         $profesionales->horario_atencion = $request->horario_atencion;
         $profesionales->observaciones = $request->observaciones;
 
-        // Subir los archivos si existen
-        $archivos = ['archivo_1', 'archivo_2', 'archivo_3', 'archivo_4', 'archivo_5', 'archivo_6'];
-        foreach ($archivos as $archivo) {
-            if ($request->hasFile($archivo)) {
-                $path = $request->file($archivo)->store('uploads', 'public');
-                $profesionales->$archivo = $path;
-            }
+         // Eliminar archivo actual si se solicita
+        if ($request->has('eliminar_archivo') && $profesionales->archivo_1) {
+            Storage::disk('public')->delete($profesionales->archivo_1);
+            $profesionales->archivo_1 = null; // Limpiar el campo en la base de datos
         }
+
+
+        // Procesar cada archivo cargado
+        if ($request->hasFile('archivo_1')) {
+            foreach ($request->file('archivo_1') as $archivo) {
+                // Guardar el archivo en la carpeta 'uploads' en storage/public
+                $path = $archivo->store('uploads', 'public');
+                $archivosGuardados[] = $path;
+            }
+
+            // Si existe un archivo anterior, lo eliminamos
+            if ($profesionales->archivo_1) {
+                Storage::disk('public')->delete($profesionales->archivo_1);
+            }
+
+            \Log::info($archivosGuardados); 
+
+            $profesionales->archivo_1 = implode(', ', $archivosGuardados);
+        }        
 
         // Actualizar el profesional
         $profesionales->save();
 
-        // Redirigir con mensaje de éxito
-        Session::flash('message', 'Profesional actualizado satisfactoriamente!');
-        return Redirect::to('profesionales');
+        // Redirigir con mensaje de éxito        
+        return redirect()->route('profesionales.index')->with('message', 'Guardado satisfactoriamente!');
     }
 
 

@@ -41,7 +41,7 @@ Route::get('profesionales/actualizar/{id}', [ProfesionalesController::class, 'ac
     ->name('profesionales.actualizar');
 
 //Route::put('profesionales/update/{id}', 'ProfesionalesController@update')->name('profesionales.update');
-Route::get('profesionales/update/{id}', [ProfesionalesController::class, 'update'])
+Route::put('profesionales/update/{id}', [ProfesionalesController::class, 'update'])
     ->name('profesionales.update');
  
 /* Eliminar */

@@ -1,10 +1,4 @@
-<!-- Scripts -->
-
-<script src="{{ secure_asset('js/app.js') }}" defer></script>   
-
-<!-- Styles -->
-
-<link href="{{ secure_asset('css/app.css') }}" rel="stylesheet">
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
 
@@ -21,8 +15,6 @@
         <div class="col-md-12">
             <section class="panel"> 
                 <div class="panel-body">
-
-                    <input type="hidden" name="_method" value="PUT">
                             
                     <!--  Acá el formulario en Limpio para crear un nuevo registro -->
                     @csrf
@@ -64,6 +56,7 @@
                             </div>
                         </div>
                     </div>
+                    <br>
 
                     <div class="row">
                         <div class="col">
@@ -107,6 +100,8 @@
 
                         </div>
                     </div>
+                    <br>
+                    <br> 
 
                     <div class="row">
                         <div class="col">
@@ -143,7 +138,7 @@
                             <div class="form-group">
                                 <label for="nombre" class="negrita">Especialidad:</label> 
                                 <div>
-                                    <input class="form-control" placeholder="Especialidad" required="required" name="especialidad" type="text" id="especialidad"> 
+                                    <textarea class="form-control" placeholder="Especialidad" required="required" name="especialidad" type="text" id="especialidad" rows="2"></textarea>
                                 </div>
                             </div>
 
@@ -207,6 +202,7 @@
                         </div>
                         
                     </div>
+                    <br>
 
                     <div class="row">
 
@@ -233,79 +229,27 @@
                         </div>
 
                     </div>
-
+                    <br>
+                    <br> 
 
                     <div class="row">
                         <div class="col">
 
                             <div class="form-group">
-                                <label for="archivo">Adjuntar Archivo 1:</label>
-                                <input type="file" class="form-control" name="archivo_1" id="archivo_1" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                            </div>
-
-                        </div>
-                        <div class="col">
-
-                            <div class="form-group">
-                                <label for="img" class="negrita">Adjuntar archivo 2:</label>
-                                <div>
-                                <input type="file" class="form-control" name="archivo_2" id="archivo_2" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"> 
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="col">
-
-                            <div class="form-group">
-                                <label for="img" class="negrita">Adjuntar archivo 3:</label>
-                                <div>
-                                    <input type="file" class="form-control" name="archivo_3" id="archivo_3" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                                </div>
+                                <label for="archivos">Adjuntar Archivos</label>
+                                <input type="file" class="form-control" name="archivo_1[]" id="archivo_1" accept=".jpg, .jpeg, .png, .pdf, .doc, .docx, .xls, .xlsx" multiple>
                             </div>
 
                         </div>
 
                     </div>
 
-                    <div class="row">
-                        <div class="col">
+                    <br>
 
-                            <div class="form-group">
-                                <label for="img" class="negrita">Adjuntar archivo 4:</label>
-                                <div>
-                                <input type="file" class="form-control" name="archivo_4" id="archivo_4" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                                </div>
-                            </div>
-                            
-                        </div>
-
-                        <div class="col">
-
-                            <div class="form-group">
-                                <label for="img" class="negrita">Adjuntar archivo 5:</label>
-                                <div>
-                                <input type="file" class="form-control" name="archivo_5" id="archivo_5" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"> 
-                                </div>
-                            </div>
-                            
-                        </div>
-
-                        <div class="col">
-
-                            <div class="form-group">
-                                <label for="img" class="negrita">Adjuntar archivo 6:</label>
-                                <div>
-                                <input type="file" class="form-control" name="archivo_6" id="archivo_6" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                                </div>
-                            </div>
-                            
-                        </div>
-
-
-                    </div>
+                    <br>
 
                     <button type="submit" class="btn btn-info">Guardar</button>
-                    <a href="{{ route('profesionales') }}" class="btn btn-warning">Cancelar</a>
+                    <a href="{{ route('profesionales.index') }}" class="btn btn-warning">Cancelar</a>
 
                     <br>
                     <br> 
